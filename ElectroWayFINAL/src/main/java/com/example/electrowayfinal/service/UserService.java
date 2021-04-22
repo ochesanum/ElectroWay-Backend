@@ -14,11 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.mail.MessagingException;
-import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.util.*;
 
-import com.example.electrowayfinal.exceptions.PasswordsDoNotMatch;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -34,7 +32,7 @@ public class UserService implements UserDetailsService {
         this.emailService = emailService;
     }
 
-    public List<User> getUsers(){
+    public List<User> getUsers() {
         System.out.println("logUser");
         return userRepository.findAll();
     }
@@ -45,30 +43,20 @@ public class UserService implements UserDetailsService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public void registerNewUserAccount(User user, String confirmedPassword) throws PasswordsDoNotMatch {
-        Optional<User> userOptional= userRepository.findUserByEmailAddress(user.getEmailAddress());
-        if(userOptional.isPresent()){
+    public void registerNewUserAccount(User user) {
+        Optional<User> userOptional = userRepository.findUserByEmailAddress(user.getEmailAddress());
+        if (userOptional.isPresent()) {
             throw new IllegalStateException("email taken!");
         }
 
         // Se comenteaza pentru ca: Validarea parolei se face pe hashPassword
-        //Dupa rezolvarea problemei, se decomenteaza
+        // Dupa rezolvarea problemei, se decomenteaza
 
         String encryptedPassword;
-        String encryptedConfirmedPassword = confirmedPassword;
 
+        encryptedPassword = passwordEncoder.encode(user.getPassword());
 
-        if (!user.getPasswordHash().equals(confirmedPassword))
-            throw new PasswordsDoNotMatch("passwords do not match");
-
-
-
-
-        encryptedPassword = passwordEncoder.encode(user.getPasswordHash());
-
-
-
-        user.setPasswordHash(encryptedPassword);
+        user.setPassword(encryptedPassword);
         user.setEnabled(false);
 
         Optional<User> saved = Optional.of(user);
@@ -82,7 +70,7 @@ public class UserService implements UserDetailsService {
                 } catch (MessagingException e) {
                     e.printStackTrace();
                 }
-            } catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         });
@@ -91,28 +79,28 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
         System.out.println(user);
 
-        saved.get();
+        //saved.get();
 
     }
 
 
-    public void deleteUser(Long id){
+    public void deleteUser(Long id) {
         boolean exists = userRepository.existsById(id);
-        if(!exists)
+        if (!exists)
             throw new IllegalStateException("user with id " + id + " does NOT exist");
         userRepository.deleteById(id);
     }
 
     @Transactional
-    public void updateUser(Long userId, String firstName, String lastName, String emailAddress){
+    public void updateUser(Long userId, String firstName, String lastName, String emailAddress) {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("user with id " + userId + "does not exist"));
         if (firstName != null && firstName.length() > 0 && !Objects.equals(user.getFirstName(), firstName))
             user.setFirstName(firstName);
         if (lastName != null && lastName.length() > 0 && !Objects.equals(user.getLastName(), lastName))
             user.setFirstName(lastName);
-        if  (emailAddress != null  && emailAddress.length() > 0 && !Objects.equals(user.getEmailAddress(), emailAddress)){
+        if (emailAddress != null && emailAddress.length() > 0 && !Objects.equals(user.getEmailAddress(), emailAddress)) {
             Optional<User> userOptional = userRepository.findUserByEmailAddress(emailAddress);
-            if (userOptional.isPresent()){
+            if (userOptional.isPresent()) {
                 throw new IllegalStateException("email taken");
             }
             user.setEmailAddress(emailAddress);
@@ -120,7 +108,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public void enableUser(Long userId){
+    public void enableUser(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("user with id " + userId + "does not exist"));
         user.setEnabled(true);
     }
@@ -140,12 +128,9 @@ public class UserService implements UserDetailsService {
             response.addCookie(cookie);
         }
     */
-    public boolean loggedIn( HttpServletRequest request, String name){
-        if (request.getCookies() == null)
-            return false;
-        return Arrays.stream(request.getCookies()).anyMatch(cookie -> name.equals(cookie.getName()));
-    }
 
+
+    // :))))) Aici face load user by email address
     @Override
     public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
         Optional<User> user = userRepository.findUserByEmailAddress(s);
@@ -155,36 +140,34 @@ public class UserService implements UserDetailsService {
         return user.map(MyUserDetails::new).get();
     }
 
-
     public Optional<User> getOptionalUser(User user) {
         return userRepository.findUserByEmailAddress(user.getEmailAddress());
     }
 
-    public void updateResetPasswordToken(String token,String email) throws Exception{
+    public void updateResetPasswordToken(String token, String email) throws Exception {
         Optional<User> user = userRepository.findUserByEmailAddress(email);
 
-        if (user.isPresent()){
+        if (user.isPresent()) {
             user.get().setPasswordResetToken(token);
             userRepository.save(user.get());
-        }
-        else{
+        } else {
             throw new Exception("cringe");
         }
     }
 
-    public User get(String passwordResetToken){
+    public User get(String passwordResetToken) {
         return userRepository.findUserByPasswordResetToken(passwordResetToken).isPresent()
                 ? userRepository.findUserByPasswordResetToken(passwordResetToken).get()
                 : null;
 
     }
 
-    public void updatePassword(User user, String newPassword, String passwordResetToken){
+    public void updatePassword(User user, String newPassword, String passwordResetToken) {
         //TODO :> OwO :^)
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String encodedPassword = passwordEncoder.encode(newPassword);
 
-        user.setPasswordHash(encodedPassword);
+        user.setPassword(encodedPassword);
         user.setPasswordResetToken(passwordResetToken);
 
         userRepository.save(user);

@@ -1,0 +1,120 @@
+{
+	"info": {
+		"_postman_id": "1437515c-43b8-4b1e-9c70-d50c16b0d94c",
+		"name": "Electroway tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\": \"cxdsasasffdsvddsd\",\r\n    \"password\": \"ds5safdsas!Aa1\",\r\n    \"firstName\": \"vcxdsfasafsdsdda23dsdzx\",\r\n    \"lastName\": \"xczdafsasfssdsxc\",\r\n    \"phoneNumber\": \"66dssasaffdsdsff232ddssdsasss4335\",\r\n    \"emailAddress\": \"electroway@mailinator.com\",\r\n    \"address1\": \"xzcdsdsaf324dssxzasdsac\",\r\n    \"city\": \"cxzsafcx\",\r\n    \"country\": \"Rdsafcxzcxz\",\r\n    \"zipcode\": \"73sfad0\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Forgot password",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/forgot_password?email=electroway@mailinator.com",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"forgot_password"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "electroway@mailinator.com"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reset password",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/reset_password?token=Gc7YENlwxqre5kdhxo6DFScdyQO9TPnzO4mlSdFJbBLVt&password=Afjkahs!23fsa",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"reset_password"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "Gc7YENlwxqre5kdhxo6DFScdyQO9TPnzO4mlSdFJbBLVt"
+						},
+						{
+							"key": "password",
+							"value": "Afjkahs!23fsa"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/login?username=electroway@mailinator.com&password=Afjkahs!23fsa",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"login"
+					],
+					"query": [
+						{
+							"key": "username",
+							"value": "electroway@mailinator.com"
+						},
+						{
+							"key": "password",
+							"value": "Afjkahs!23fsa"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
