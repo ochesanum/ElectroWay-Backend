@@ -6,7 +6,6 @@ import com.example.electrowayfinal.user.MyUserDetails;
 import com.example.electrowayfinal.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -133,16 +132,16 @@ public class UserService implements UserDetailsService {
 
     // :))))) Aici face load user by email address
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<User> user = userRepository.findUserByEmailAddress(username);
+    public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
+        Optional<User> user = userRepository.findUserByEmailAddress(s);
 
-        user.orElseThrow(() -> new UsernameNotFoundException("Username not found: " + username));
+        user.orElseThrow(() -> new UsernameNotFoundException("Username not found: " + s));
 
         return user.map(MyUserDetails::new).get();
     }
 
-    public Optional<User> getOptionalUser(String email) {
-        return userRepository.findUserByEmailAddress(email);
+    public Optional<User> getOptionalUser(User user) {
+        return userRepository.findUserByEmailAddress(user.getEmailAddress());
     }
 
     public void updateResetPasswordToken(String token, String email) throws Exception {

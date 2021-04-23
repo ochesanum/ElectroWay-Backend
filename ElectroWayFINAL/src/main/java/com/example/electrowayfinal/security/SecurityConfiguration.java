@@ -1,40 +1,28 @@
 package com.example.electrowayfinal.security;
 
-import com.example.electrowayfinal.utils.CustomJwtAuthenticationFilter;
-import com.example.electrowayfinal.utils.JwtAuthenticationEntryPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
 
 @EnableWebSecurity
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    /*@Qualifier("userService")
+    @Qualifier("userService")
     @Autowired
-    UserDetailsService UserService;*/
+    UserDetailsService UserService;
 
     @Qualifier("userService")
     @Autowired
     private UserDetailsService userDetailsService;
-
-    @Autowired
-    private CustomJwtAuthenticationFilter customJwtAuthenticationFilter;
-
-    @Autowired
-    private JwtAuthenticationEntryPoint unauthorizedHandler;
 
     @Bean
     public PasswordEncoder encoder() {
@@ -49,16 +37,16 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         return authProvider;
     }
 
-//    @Override
-//    protected void configure(AuthenticationManagerBuilder auth)  {
-//        //     auth.userDetailsService(UserService);
-//        auth.authenticationProvider(authProvider());
-//    }
-
     @Override
-    public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(encoder());
+    protected void configure(AuthenticationManagerBuilder auth)  {
+        //     auth.userDetailsService(UserService);
+        auth.authenticationProvider(authProvider());
     }
+
+//    @Override
+//    public void configure(AuthenticationManagerBuilder auth) throws Exception {
+//        auth.userDetailsService(userDetailsService).passwordEncoder(encoder());
+//    }
 
     @Bean
     @Override
@@ -68,27 +56,26 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        http
 
-        http.csrf().disable()
-//                .antMatchers("/helloadmin").hasRole("ADMIN")
-//                .antMatchers("/hellouser").hasAnyRole("USER","ADMIN")
-                .authorizeRequests().antMatchers("/register","/login", "/", "/activation", "/forgot_password", "/reset_password","/station/**").permitAll().anyRequest().authenticated()
-                .and().logout().permitAll()
-                .and().exceptionHandling()
-                .authenticationEntryPoint(unauthorizedHandler).and().
-                // make sure we use stateless session; session won't be used to
-                // store user's state.
-                        sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-
-// 		Add a filter to validate the tokens with every request
-        http.addFilterBefore(customJwtAuthenticationFilter,
-                UsernamePasswordAuthenticationFilter.class);
-
+                .authorizeRequests()
+                .antMatchers("/","/register","/activation","/login","/forgot_password","/reset_password").permitAll().anyRequest().authenticated()
+                .and()
+                .csrf()
+                .disable()
+                .httpBasic()
+                .and()
+                .formLogin()
+//                .loginPage("/login")
+                .defaultSuccessUrl("/authenticated")
+                .permitAll()
+                .and()
+                .logout()
+                .permitAll();
     }
 
     @Bean
-    public PasswordEncoder getPasswordEncoder() {
+    public PasswordEncoder getPasswordEncoder(){
         return new BCryptPasswordEncoder();
     }
 

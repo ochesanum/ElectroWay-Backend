@@ -28,7 +28,7 @@ public class UserController {
         return ("<h1>Welcome");
     }
 
-    @GetMapping("/users")
+    @GetMapping("/user")
     public String user() {
         return this.userService.getUsers().toString();
     }
@@ -47,7 +47,7 @@ public class UserController {
     @PostMapping("/register")
     public Optional<User> registerNewUser(@Valid @RequestBody User user) throws DataIntegrityViolationException {
         userService.registerNewUserAccount(user);
-        return userService.getOptionalUser(user.getEmailAddress());
+        return userService.getOptionalUser(user);
     }
 
     /*

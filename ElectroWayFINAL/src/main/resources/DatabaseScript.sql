@@ -13,7 +13,8 @@
 
 
 -- Dumping database structure for electroway
-
+DROP DATABASE IF EXISTS `electroway`;
+CREATE DATABASE IF NOT EXISTS `electroway` /*!40100 DEFAULT CHARACTER SET latin1 */;
 USE `electroway`;
 
 -- Dumping structure for table electroway.car
@@ -103,7 +104,7 @@ CREATE TABLE IF NOT EXISTS `review`
 DROP TABLE IF EXISTS `station`;
 CREATE TABLE IF NOT EXISTS `station`
 (
-    `id`                     bigint(20)  NOT NULL AUTO_INCREMENT,
+    `id`                     bigint(20)  NOT NULL,
     `address`                varchar(64) NOT NULL,
     `map_latitude_location`  double      NOT NULL,
     `map_longitude_location` double      NOT NULL,
