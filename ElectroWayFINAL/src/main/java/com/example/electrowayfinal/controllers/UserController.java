@@ -1,5 +1,8 @@
 package com.example.electrowayfinal.controllers;
 
+import com.example.electrowayfinal.dtos.UserDto;
+import com.example.electrowayfinal.exceptions.ForbiddenRoleAssignmentAttemptException;
+import com.example.electrowayfinal.exceptions.UserNotFoundException;
 import com.example.electrowayfinal.models.User;
 import com.example.electrowayfinal.models.VerificationToken;
 import com.example.electrowayfinal.service.UserService;
@@ -10,6 +13,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import javax.management.relation.RoleNotFoundException;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.sql.Timestamp;
 import java.util.List;
@@ -19,9 +24,14 @@ import java.util.Optional;
 @RestController
 public class UserController {
     //TODO Automated testing
-
     private final UserService userService;
     private final VerificationTokenService verificationTokenService;
+
+    @Autowired //dependency injection, userService is automatically instantiated
+    public UserController(UserService userService, VerificationTokenService verificationTokenService) {
+        this.userService = userService;
+        this.verificationTokenService = verificationTokenService;
+    }
 
     @GetMapping("/")
     public String home() {
@@ -29,14 +39,13 @@ public class UserController {
     }
 
     @GetMapping("/user")
-    public String user() {
-        return this.userService.getUsers().toString();
+    public User getCurrentUser(HttpServletRequest httpServletRequest) throws UserNotFoundException {
+        return userService.getCurrentUser(httpServletRequest);
     }
 
-    @Autowired //dependency injection, userService is automatically instantiated
-    public UserController(UserService userService, VerificationTokenService verificationTokenService) {
-        this.userService = userService;
-        this.verificationTokenService = verificationTokenService;
+    @GetMapping("/users")
+    public List<User> users() {
+        return this.userService.getUsers();
     }
 
     @GetMapping
@@ -45,35 +54,24 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public Optional<User> registerNewUser(@Valid @RequestBody User user) throws DataIntegrityViolationException {
-        userService.registerNewUserAccount(user);
-        return userService.getOptionalUser(user);
+    public Optional<UserDto> registerNewUser(@Valid @RequestBody UserDto userDto) throws DataIntegrityViolationException {
+        userService.registerNewUserAccount(userDto);
+        return userService.getOptionalUserDto(userDto.getEmailAddress());
     }
 
-    /*
-        @RequestMapping("login")
-        @PutMapping()
-        public void login(
-                HttpServletRequest request,
-                HttpServletResponse response,
-                @RequestParam(required = true) String email,
-                @RequestParam(required = true) String password
-        ){
-            userService.login(request,response,email,password);
-        }
-    */
     @DeleteMapping(path = "{userId}")
     public void deleteUser(@PathVariable("userId") Long id) {
         userService.deleteUser(id);
     }
 
-    @PutMapping("{userId}")
-    public void updateStudent(
-            @PathVariable("userId") Long id,
-            @RequestParam(required = false) String firstName,
-            @RequestParam(required = false) String lastName,
-            @RequestParam(required = false) String emailAddress) {
-        userService.updateUser(id, firstName, lastName, emailAddress);
+    @PutMapping("/user")
+    public void updateUser(@RequestBody User modifiedUser, HttpServletRequest httpServletRequest) {
+        userService.updateUser(modifiedUser, httpServletRequest);
+    }
+
+    @PostMapping("/user/addrole")
+    public void addRoleToUser(@RequestParam String roleName, HttpServletRequest httpservletRequest) throws UserNotFoundException, RoleNotFoundException, ForbiddenRoleAssignmentAttemptException {
+        userService.addRole(userService.getCurrentUser(httpservletRequest), roleName);
     }
 
     @GetMapping("/activation")

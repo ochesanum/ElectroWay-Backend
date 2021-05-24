@@ -1,13 +1,14 @@
 package com.example.electrowayfinal.controllers;
 
 
-import com.example.electrowayfinal.exceptions.PasswordsDoNotMatch;
 import com.example.electrowayfinal.models.User;
 import com.example.electrowayfinal.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.utility.RandomString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,8 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Random;
 
+@Slf4j
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 public class ForgotPasswordController {
 
     private final JavaMailSender javaMailSender;
@@ -34,17 +38,22 @@ public class ForgotPasswordController {
     }
 
     @PostMapping("/forgot_password")
-    public String processForgotPasswordForm(HttpServletRequest request) throws Exception /* :) */ {
-        String email = request.getParameter("email");
-        String token = RandomString.make(45);
+    public String processForgotPasswordForm(HttpServletRequest request) throws MessagingException {
+        Random random = new Random();
+        int intToken = 1000 + random.nextInt(9999);
 
-        System.out.println("token: " + token);
+        String email = request.getParameter("email");
+        String token = String.valueOf(intToken);
+
+
+        log.info("token: " + token);
 
         userService.updateResetPasswordToken(token, email);
 
-        String resetPasswordLink = "http://localhost:8090/reset_password?token=" + token;
+//        String resetPasswordLink = "http://localhost:8090/reset_password?token=" + token;
 
-        sendEmail(email, resetPasswordLink);
+
+        sendEmail(email, token);
 
         return "<h1>Forgot password form</h1>";
     }
@@ -58,7 +67,6 @@ public class ForgotPasswordController {
 
         if (user == null)
             return "Invalid token";
-
 
         userService.updatePassword(user, password, token);
 
@@ -76,20 +84,3 @@ public class ForgotPasswordController {
         javaMailSender.send(message);
     }
 }
-
-//    String body = templateEngine.process("verification",context);
-//
-//    MimeMessage message = javaMailSender.createMimeMessage();
-//    MimeMessageHelper helper = new MimeMessageHelper(message,true);
-//            helper.setTo(user.getEmailAddress());
-//                    helper.setSubject("email adress verification");
-//                    helper.setText(body,true);
-//                    javaMailSender.send(message);
-
-
-//    MimeMessage message = javaMailSender.createMimeMessage();
-//    MimeMessageHelper helper = new MimeMessageHelper(message,true);
-//            helper.setTo(user.getEmailAddress());
-//                    helper.setSubject("email adress verification");
-//                    helper.setText(body,true);
-//                    javaMailSender.send(message);
