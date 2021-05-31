@@ -5,7 +5,7 @@
 Electroway is an application designed to make charging your electric car and planning a route as easy and intuitive as possible.
 Team 1, consisting of Harabagiu Radu, Ochesanu Mihnea, Curca Andrei, Rotariu Cosmin si Isac Iulian was responsible for everything in the API excepting routing, database design, error handling and a few endpoints. As a note, while we did develop most endpoints, team 3 helped standardize the code by refactoring a number of the first endpoints we'd developed, mainly by making liberal use of Lombok.
 
-The functionalities to which Radu Harabagiu contributed are:
+### The functionalities to which Radu Harabagiu contributed are:
 
 1. The JWT-based authentication filter, containing
 	* An entry point
@@ -25,7 +25,7 @@ The functionalities to which Radu Harabagiu contributed are:
 
 Endpoints: User,Login,PayPal,PayPalDetail
 
-The functionalities to which Mihnea Ochesanu contributed are:
+### The functionalities to which Mihnea Ochesanu contributed are:
 
 1. An Email-based password reset as well as account confirmation upon registration
 
