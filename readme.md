@@ -1,6 +1,6 @@
 
 # ElectroWay API
-## ElectroWay Backend Team1
+## ElectroWay Backend Team 1
 
 Electroway is an application designed to make charging your electric car and planning a route as easy and intuitive as possible.
 Team 1, consisting of Harabagiu Radu, Ochesanu Mihnea, Curca Andrei, Rotariu Cosmin si Isac Iulian was responsible for everything in the API excepting routing, database design, error handling and a few endpoints. As a note, while we did develop most endpoints, team 3 helped standardize the code by refactoring a number of the first endpoints we'd developed, mainly by making liberal use of Lombok.
