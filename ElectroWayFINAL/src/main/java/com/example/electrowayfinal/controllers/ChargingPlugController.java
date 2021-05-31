@@ -14,12 +14,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "https://electrowayweb.herokuapp.com")
 @RequestMapping("/station")
 public class ChargingPlugController {
     private final ChargingPlugService chargingPlugService;
@@ -39,8 +40,8 @@ public class ChargingPlugController {
 
     @PostMapping(value = "{id}/points/{cId}")
     @ResponseStatus(HttpStatus.OK)
-    public ChargingPlug createChargingPlug(@RequestBody ChargingPlug chargingPlug, @PathVariable("cId") Long cId, @PathVariable("id") Long id, HttpServletRequest httpServletRequest) {
-        chargingPlugService.createChargingPlug(chargingPlug, cId, id, httpServletRequest);
+    public ChargingPlug createChargingPlug(@RequestBody ChargingPlug chargingPlug, @PathVariable("id") Long id, @PathVariable("cId") Long cId, HttpServletRequest httpServletRequest) {
+        chargingPlugService.createChargingPlug(chargingPlug, id, cId, httpServletRequest);
         return chargingPlug;
     }
 
@@ -55,14 +56,14 @@ public class ChargingPlugController {
 
     @GetMapping(path = "/{id}/points/{cId}/plugs/{pId}")
     @ResponseStatus(HttpStatus.OK)
-    public Optional<ChargingPlug> getChargingPlug(@PathVariable("pId") Long pId, @PathVariable("id") Long id, @PathVariable("cId") Long cId, HttpServletRequest httpServletRequest) {
-        return chargingPlugService.getChargingPlugById(pId, id, cId, httpServletRequest);
+    public Optional<ChargingPlug> getChargingPlug(@PathVariable("id") Long id, @PathVariable("cId") Long cId, @PathVariable("pId") Long pId, HttpServletRequest httpServletRequest) {
+        return chargingPlugService.getChargingPlugById(id, cId, pId, httpServletRequest);
     }
 
     @PutMapping(path = "/{id}/points/{cId}/plugs/{pId}")
     @ResponseStatus(HttpStatus.OK)
-    public Optional<ChargingPlug> updateChargingPlug(@RequestBody ChargingPlug chargingPlug, @PathVariable("pId") Long pId, @PathVariable("id") Long id, @PathVariable("cId") Long cId, HttpServletRequest httpServletRequest) throws Exception {
-        return chargingPlugService.updateChargingPlug(pId,id,cId,chargingPlug,httpServletRequest);
+    public Optional<ChargingPlug> updateChargingPlug(@RequestBody ChargingPlug chargingPlug, @PathVariable("id") Long id, @PathVariable("cId") Long cId, @PathVariable("pId") Long pId, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
+        return chargingPlugService.updateChargingPlug(id,cId,pId,chargingPlug,httpServletRequest, httpServletResponse);
     }
 
     @DeleteMapping(path = "/{id}/points/{cId}/plugs/{pId}")

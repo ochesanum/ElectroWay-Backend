@@ -58,13 +58,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
-        http.csrf().disable().cors().disable()
-                .authorizeRequests().antMatchers("/station/**").hasRole("OWNER").and()
-                .authorizeRequests().antMatchers("/register", "/login", "/", "/activation", "/forgot_password", "/reset_password", "/station/**", "/documentation/**", "/swagger-resources/**", "/swagger-ui.html", "/v2/api-docs", "/webjars/**").permitAll().anyRequest().authenticated()
+        http.csrf().disable().cors().and()
+//                .authorizeRequests().antMatchers("/station/**").hasRole("OWNER").and()
+                .authorizeRequests().antMatchers("/register", "/login", "/", "/activation", "/forgot_password", "/reset_password", "/payment/**","/documentation/**", "/swagger-resources/**", "/swagger-ui.html", "/v2/api-docs", "/webjars/**").permitAll().anyRequest().authenticated()
                 .and().logout().permitAll()
                 .and().exceptionHandling()
                 .authenticationEntryPoint(unauthorizedHandler).and().
-                sessionManagement()
+                        sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         http.addFilterBefore(customJwtAuthenticationFilter,

@@ -4,12 +4,14 @@ import com.example.electrowayfinal.exceptions.UserNotFoundException;
 import com.example.electrowayfinal.exceptions.WrongAccessException;
 import com.example.electrowayfinal.exceptions.WrongPrivilegesException;
 import com.example.electrowayfinal.models.Car;
+import com.example.electrowayfinal.models.PlugType;
 import com.example.electrowayfinal.models.Role;
 import com.example.electrowayfinal.models.User;
 import com.example.electrowayfinal.repositories.CarRepository;
 import com.example.electrowayfinal.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 public class CarService {
     private final CarRepository carRepository;
     private final UserService userService;
+    private final PlugTypeService plugTypeService;
     private String secret;
 
     @Value("${jwt.secret}")
@@ -29,10 +32,12 @@ public class CarService {
         this.secret = secret;
     }
 
+    @Lazy
     @Autowired
-    public CarService(CarRepository carRepository, UserService userService) {
+    public CarService(CarRepository carRepository, UserService userService, PlugTypeService plugTypeService) {
         this.carRepository = carRepository;
         this.userService = userService;
+        this.plugTypeService = plugTypeService;
     }
 
     public void createCar(Car car, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws UserNotFoundException {
@@ -94,6 +99,9 @@ public class CarService {
 
     public void deleteCar(Long carId, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws UserNotFoundException {
         getCar(carId, httpServletRequest, httpServletResponse);
+        for(PlugType plugType: plugTypeService.getCarPlugTypes(carId,httpServletRequest,httpServletResponse)){
+            plugTypeService.deletePlugType(plugType.getId(),httpServletRequest,httpServletResponse);
+        }
         carRepository.deleteById(carId);
     }
 }

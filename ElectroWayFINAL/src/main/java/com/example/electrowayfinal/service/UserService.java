@@ -3,8 +3,10 @@ package com.example.electrowayfinal.service;
 import com.example.electrowayfinal.dtos.UserDto;
 import com.example.electrowayfinal.exceptions.ForbiddenRoleAssignmentAttemptException;
 import com.example.electrowayfinal.exceptions.UserNotFoundException;
+import com.example.electrowayfinal.exceptions.WrongPrivilegesException;
 import com.example.electrowayfinal.models.Privilege;
 import com.example.electrowayfinal.models.Role;
+import com.example.electrowayfinal.models.Station;
 import com.example.electrowayfinal.models.User;
 import com.example.electrowayfinal.repositories.RoleRepository;
 import com.example.electrowayfinal.repositories.UserRepository;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Service;
 import javax.mail.MessagingException;
 import javax.management.relation.RoleNotFoundException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,22 +40,25 @@ import java.util.stream.Collectors;
 @Service
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
+
     private final RoleRepository roleRepository;
     private final VerificationTokenService verificationTokenService;
     private final EmailService emailService;
     private String secret;
 
+    private final StationService stationService;
     @Value("electroway")
     public void setSecret(String secret) {
         this.secret = secret;
     }
 
     @Autowired
-    public UserService(UserRepository userRepository, VerificationTokenService verificationTokenService, EmailService emailService, RoleRepository roleRepository) {
+    public UserService(UserRepository userRepository, VerificationTokenService verificationTokenService, EmailService emailService, RoleRepository roleRepository, StationService stationService) {
         this.userRepository = userRepository;
         this.verificationTokenService = verificationTokenService;
         this.emailService = emailService;
         this.roleRepository = roleRepository;
+        this.stationService = stationService;
     }
 
     public List<User> getUsers() {
@@ -71,45 +77,13 @@ public class UserService implements UserDetailsService {
             throw new RoleNotFoundException(roleName);
 
         Collection<Role> roleList = user.getRoles();
-
-        if (roleRepository.findByName("ROLE_ADMIN").isEmpty()) {
-            throw new RoleNotFoundException("Role not found.");
-        }
-
-        if (!roleList.contains(roleRepository.findByName("ROLE_ADMIN").get()) && role.get().getName().equals("ROLE_ADMIN"))
+        if  (!roleList.contains(roleRepository.findByName("ROLE_ADMIN").get()) && role.get().getName().equals("ROLE_ADMIN"))
             throw new ForbiddenRoleAssignmentAttemptException(user);
 
         roleList.add(role.get());
 
         user.setRoles(roleList);
         userRepository.save(user);
-    }
-
-    public void removeRoleFromUser(HttpServletRequest httpServletRequest, String roleName) throws Exception {
-        String bearerToken = httpServletRequest.getHeader("Authorization");
-        bearerToken = bearerToken.substring(6);
-
-        Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(bearerToken).getBody();
-        String username = claims.getSubject();
-
-        Optional<User> user = userRepository.findUserByUsername(username);
-        Optional<Role> role = roleRepository.findByName(roleName);
-
-        if (role.isEmpty())
-            throw new RoleNotFoundException(roleName);
-
-        if (user.isEmpty()) {
-            throw new UserNotFoundException("User not found.");
-        }
-
-        Collection<Role> roles = user.get().getRoles();
-
-        if (!roles.contains(role.get()))
-            throw new Exception("User " + user.get().getUsername() + " does not have role " + roleName + " so you cannot remove it.");
-
-        roles.remove(role.get());
-
-        userRepository.save(user.get());
     }
 
     public void registerNewUserAccount(UserDto userDto) {
@@ -173,7 +147,7 @@ public class UserService implements UserDetailsService {
     }
 
     //user
-    public User getCurrentUser(HttpServletRequest httpServletRequest) throws UserNotFoundException {
+    public User getCurrentUser(HttpServletRequest httpServletRequest) throws UserNotFoundException{
         String bearerToken = httpServletRequest.getHeader("Authorization");
         bearerToken = bearerToken.substring(6);
 
@@ -193,19 +167,27 @@ public class UserService implements UserDetailsService {
             return Optional.empty();
 
         return Optional.of(new UserDto(user.get().getUsername(), user.get().getPassword(), user.get().getFirstName(), user.get().getLastName(),
-                user.get().getPhoneNumber(), user.get().getEmailAddress(), user.get().getAddress1(), user.get().getAddress2(), user.get().getCity(),
-                user.get().getCountry(), user.get().getRegion(), user.get().getZipcode(), user.get().getRoles().stream().map(Role::getName).collect(Collectors.toCollection(ArrayList::new))));
+                user.get().getPhoneNumber(), user.get().getEmailAddress(), user.get().getAddress1(),user.get().getAddress2(), user.get().getCity(),
+                user.get().getCountry(),user.get().getRegion(), user.get().getZipcode()));
     }
 
-    public void deleteUser(Long id) {
+    public void deleteUser(Long id, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws UserNotFoundException {
         boolean exists = userRepository.existsById(id);
         if (!exists)
             throw new IllegalStateException("user with id " + id + " does NOT exist");
+        if (!this.getCurrentUser(httpServletRequest).getRoles().contains(roleRepository.findByName("ROLE_ADMIN").get())) {
+            throw new WrongPrivilegesException("you're not an admin");
+        }
+        List<Station> stationList = stationService.getAllStations();
+        for(Station station: stationList){
+            if(station.getUser().getId()==id){
+                stationService.deleteStation(station.getId(),httpServletRequest,httpServletResponse);
+            }
+        }
+        verificationTokenService.deleteToken(verificationTokenService.findByUser(userRepository.findUserById(id).get()));
         userRepository.deleteById(id);
     }
 
-    // UpdateUser nu poate schimba parola utilizatorului, pentru asta trebuie folosit forgotPassword
-    // De asemenea, rolurile unui utilizator nu se modifica nici ele cu updateUser, pentru asta folositi addRole
     public void updateUser(User modifiedUser, HttpServletRequest httpServletRequest) {
         String bearerToken = httpServletRequest.getHeader("Authorization");
         bearerToken = bearerToken.substring(6);
@@ -217,15 +199,51 @@ public class UserService implements UserDetailsService {
         if (optionalUser.isEmpty()) {
             throw new NoSuchElementException("User does not exist!");
         }
-
         modifiedUser.setId(optionalUser.get().getId());
-        modifiedUser.setPassword(optionalUser.get().getPassword());
-        modifiedUser.setRoles(optionalUser.get().getRoles());
         modifiedUser.setEnabled(true);
-
-
+        modifiedUser.setRoles(optionalUser.get().getRoles());
+        modifiedUser.setPassword(optionalUser.get().getPassword());
         userRepository.save(modifiedUser);
     }
+    public void removeRoleFromUser(HttpServletRequest httpServletRequest, String roleName) throws Exception {
+        String bearerToken = httpServletRequest.getHeader("Authorization");
+        bearerToken = bearerToken.substring(6);
+
+        Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(bearerToken).getBody();
+        String username = claims.getSubject();
+
+        Optional<User> user = userRepository.findUserByUsername(username);
+        Optional<Role> role = roleRepository.findByName(roleName);
+
+        if(role.isEmpty())
+            throw new RoleNotFoundException(roleName);
+
+        Collection<Role> roles = user.get().getRoles();
+
+        if (!roles.contains(role.get()))
+            throw new Exception("User " + user.get().getUsername() + " does not have role " + roleName + " so you cannot remove it.");
+
+        roles.remove(role.get());
+
+        userRepository.save(user.get());
+    }
+
+    //TO DELETE???
+//    @Transactional
+//    public void updateUser(Long userId, String firstName, String lastName, String emailAddress) {
+//        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("user with id " + userId + "does not exist"));
+//        if (firstName != null && firstName.length() > 0 && !Objects.equals(user.getFirstName(), firstName))
+//            user.setFirstName(firstName);
+//        if (lastName != null && lastName.length() > 0 && !Objects.equals(user.getLastName(), lastName))
+//            user.setFirstName(lastName);
+//        if (emailAddress != null && emailAddress.length() > 0 && !Objects.equals(user.getEmailAddress(), emailAddress)) {
+//            Optional<User> userOptional = userRepository.findUserByEmailAddress(emailAddress);
+//            if (userOptional.isPresent()) {
+//                throw new IllegalStateException("email taken");
+//            }
+//            user.setEmailAddress(emailAddress);
+//        }
+//    }
 
     @Transactional
     public void enableUser(Long userId) {

@@ -1,13 +1,6 @@
 package com.example.electrowayfinal.models;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonView;
 import lombok.*;
-import org.springframework.context.annotation.Lazy;
-
 import javax.persistence.*;
-import javax.xml.bind.annotation.XmlTransient;
 import java.io.Serializable;
 
 @Getter
@@ -46,7 +39,7 @@ public class Station implements Serializable {
     private double longitude;
 
     @Basic
-    @Column(name = "description", nullable = true, columnDefinition = "varchar(255)")
+    @Column (name = "description", nullable = true, columnDefinition = "varchar(255")
     private String description;
 
     @ManyToOne

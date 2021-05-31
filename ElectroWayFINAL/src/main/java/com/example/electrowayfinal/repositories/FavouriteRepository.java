@@ -16,7 +16,6 @@ public interface FavouriteRepository  extends JpaRepository<Favourite, Long> {
     Optional<Favourite> findFavouriteByStationIdAndId(long stationId, long favouriteId);
 
     Optional<Favourite> findFavouriteById(long stationId);
-
     @Override
     <F extends Favourite> F save(F entity);
 

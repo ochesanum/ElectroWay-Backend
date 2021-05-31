@@ -13,12 +13,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     List<Review> findAllByStationId(long station_id);
 
-    Review findReviewByStationId(long station_id);
-
     @Override
     List<Review> findAll();
 
     Optional<Review> findReviewByStationIdAndId(Long stationId, Long reviewId);
+
+    Review findReviewByStationId(long station_id);
 
     @Override
     <R extends Review> R save(R entity);

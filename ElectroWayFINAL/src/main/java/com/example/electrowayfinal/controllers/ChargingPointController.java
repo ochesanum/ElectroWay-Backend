@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RequestMapping("/station")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "https://electrowayweb.herokuapp.com")
 @RestController
 public class ChargingPointController {
     private final ChargingPointService chargingPointService;
@@ -41,8 +41,8 @@ public class ChargingPointController {
 
     @DeleteMapping(path = "/{id}/points/{cId}")
     @ResponseStatus(HttpStatus.OK)
-    public void delete(@PathVariable("cId") Long cId, @PathVariable("id") Long id) {
-        chargingPointService.deleteChargingPointById(cId, id);
+    public void delete(@PathVariable("id") Long id, @PathVariable("cId") Long cId) {
+        chargingPointService.deleteChargingPointById(id, cId);
     }
     //cId = id charging point
     //id = id station

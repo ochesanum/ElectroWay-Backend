@@ -40,8 +40,14 @@ public class PaypalDetailService {
 
     public void updatePaypalDetail(PaypalDetail paypalDetail, HttpServletRequest httpServletRequest) throws Exception {
         User user = JwtUtil.getUserFromToken(userService, secret, httpServletRequest);
-        PaypalDetail paypalDetailToChange = paypalDetailRepository.findByUser_Id(user.getId()).orElseThrow(() -> new Exception("Can't find paypal detail for ID " + user.getId()));
 
+        if(paypalDetailRepository.findByUser_Id((user.getId())).isEmpty()) {
+            paypalDetail.setUser(user);
+            paypalDetailRepository.save(paypalDetail);
+            return;
+        }
+
+        PaypalDetail paypalDetailToChange = paypalDetailRepository.findByUser_Id(user.getId()).get();
         paypalDetailToChange.setClientId(paypalDetail.getClientId());
         paypalDetailToChange.setSecret(paypalDetail.getSecret());
         paypalDetailRepository.save(paypalDetailToChange);
@@ -49,7 +55,7 @@ public class PaypalDetailService {
 
     public PaypalDetail getPaypalDetailByOwnerId(Long id) throws Exception {
         if(paypalDetailRepository.findByUser_Id(id).isEmpty()){
-            throw new Exception("No user with the id" + id);
+            throw new Exception("There are no details for user " + id);
         }
         return paypalDetailRepository.findByUser_Id(id).get();
     }
